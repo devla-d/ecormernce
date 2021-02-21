@@ -1,0 +1,211 @@
+{% extends "shop/main.html" %}
+{% load crispy_forms_tags %}
+{% block title %} 
+  CHECKOUT | shoppy
+{% endblock title %}
+{% block content %}
+<style>
+.box-element{
+    box-shadow:hsl(0, 0%, 80%) 0 0 16px;
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 10px;
+  }
+  a{
+     color: #000;
+    }
+</style>
+<br>
+<br>
+  
+<div class="container">
+  <div class="row">
+    <div class="col-lg-6">
+      <fieldset class="box-element" id="form-wrapper">
+        <form id="form">
+					<div id="shipping-info">
+						<p>Shipping Information:</p>
+						<hr>
+						<div class="form-field">
+							<input class="form-control" type="text" name="address" placeholder="Address..">
+						</div>
+						<div class="form-field">
+							<input class="form-control" type="text" name="city" placeholder="City..">
+						</div>
+						<div class="form-field">
+							<input class="form-control" type="text" name="state" placeholder="State..">
+						</div>
+						<div class="form-field">
+							<input class="form-control" type="text" name="zipcode" placeholder="Zip code..">
+						</div>
+					</div>
+
+					<hr>
+					<input id="form-button" class="btn btn-success btn-block" type="submit" value="Continue">
+				</form>
+         <hr>
+         <div class="box-element hidden" id="payment-info">
+            <small>Paypal Options</small>
+            <div id="paypal-button-container"></div>
+        </div>
+        
+      </fieldset>
+     
+    </div>
+     <div class=" col-lg-6">
+         <div class="box-element">
+        <h3 style="text-align: center;">Order summarry</h3>
+       <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Item Name</th>
+            <th scope="col">Price</th>
+            <th scope="col">Quantity</th>
+           
+        </tr>
+        </thead>
+        <tbody>
+        {% for order_item in object.items.all %}
+        <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ order_item.item.name }}</td>
+            <td>{{ order_item.item.price }}</td>
+            <td>
+                <a href="{% url 'remove_single_item' order_item.item.slug %}"><i class="fa fa-minus mr-2"></i></a>
+                {{ order_item.quantity }}
+                <a href="{% url 'cart' order_item.item.slug %}"><i class="fa fa-plus ml-2"></i></a>
+            </td>
+            <td>
+           
+            <a style='color: red;' href="{% url 'remove_item' order_item.item.slug %}">
+                <i class="fa fa-trash float-right"></i>
+            </a>
+            </td>
+        </tr>
+        {% empty %}
+        
+        <tr>
+            <td colspan='5'>Your cart is empty</td>
+        </tr>
+        <tr>
+            <td colspan="5">
+            <a class='btn btn-primary float-right' href='/home'>Continue shopping</a>
+            </td>
+        </tr>
+        {% endfor %}
+       
+        <tr>
+            <td colspan="4"><b>Order Total</b></td>
+            <td><b>${{ object.get_total }}</b></td>
+        </tr>
+       
+        </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<script src="https://www.paypal.com/sdk/js?client-id=AT4SsTfOGhqFSrszIi6PUhydFq8Wge7Wxre15LJ5O-yp6MENXkPMleytH_h3JLRql3eTMw9ysoNFJBKJ&currency=USD"></script>
+
+<script>
+    // getting cart total price
+    var total = '{{  object.get_total }}'
+  // Render the PayPal button into #paypal-button-container
+  paypal.Buttons({
+
+
+        style:{
+                color:  'blue',
+                shape:  'rect',
+            },
+
+      // Set up the transaction
+      createOrder: function(data, actions) {
+          return actions.order.create({
+              purchase_units: [{
+                  amount: {
+                      value:parseFloat(total).toFixed(2)
+                  }
+              }]
+          });
+      },
+
+      // Finalize the transaction
+      onApprove: function(data, actions) {
+          return actions.order.capture().then(function(details) {
+              // Show a success message to the buyer
+              submitForm()
+              //alert('Transaction completed by ' + details.payer.name.given_name + '!');
+          });
+      }
+
+
+  }).render('#paypal-button-container');
+</script>
+
+<script type="text/javascript">
+        var shipping = '{{object.shipping}}'
+
+        
+
+		var form = document.getElementById('form')
+		form.addEventListener('submit', function(e){
+	    	e.preventDefault()
+	    	console.log('Form Submitted...')
+            document.getElementById('form-button').classList.add("hidden");
+            document.getElementById('payment-info').classList.remove("hidden");
+        })
+        
+        function submitForm(){
+           
+            var userFormData = {
+				'total':total,
+			}
+
+			var shippingInfo = {
+				'address':null,
+				'city':null,
+				'state':null,
+				'zipcode':null,
+            }
+            
+            if (shipping != 'False') {
+                shippingInfo.address = form.address.value
+                shippingInfo.city = form.city.value
+                shippingInfo.state = form.state.value
+                shippingInfo.zipcode = form.zipcode.value
+            }
+            console.log('Shipping Info:', shippingInfo)
+            
+
+            var url = "/process_order/"
+	    	fetch(url, {
+	    		method:'POST',
+	    		headers:{
+	    			'Content-Type':'applicaiton/json',
+	    			'X-CSRFToken':"{{csrf_token}}",
+	    		}, 
+	    		body:JSON.stringify({'form':userFormData, 'shipping':shippingInfo}),
+	    		
+	    	})
+	    	.then((response) => response.json())
+	    	.then((data) => {
+				console.log('Success:', data);
+				alert('Transaction completed');  
+
+
+                window.location.href = "{% url 'home' %}"
+                console.log('Payment button clicked')
+
+				})
+
+         
+
+
+        }
+</script>
+
+{% endblock content %}
+
+ 

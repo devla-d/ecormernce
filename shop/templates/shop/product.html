@@ -1,0 +1,114 @@
+{% extends "shop/main.html" %}
+{% load static %}
+{% block title %} 
+{% load static %}
+Product | shoppy
+{% endblock title %}
+
+{% block content %}
+<style>
+   .carousel-item{
+    height: 400px;
+  
+}
+    a{
+        color: #000;
+      }
+         
+      .circular-square {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+         
+      
+      .image-cropper {
+          width: 100px;
+          height: 100px;
+          position: relative;
+          border-radius: 50%;
+         background-size: cover;
+         display: inline-block;
+        
+        
+      }
+      .caption {
+        display: block;
+      }
+      
+    
+    </style>
+
+
+
+
+<div class="">
+  <div id="carouselExampleSlidesOnly" class="carousel slide" data-ride="carousel">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img class="d-block w-100" src="{% static 'shop/images/bg.jpg' %}" alt="First slide">
+          <div class="carousel-caption d-none d-md-block carousel-cap ">
+           <h3  style="color: rgb(220, 241, 220);">Best product get up to 50% off and free shipping</h3>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+</div>
+
+
+<br>
+
+<div class="container">
+    <section class="text-center mb-4">
+
+        <div class="row wow fadeIn">
+    
+          {% for item in object %}
+          <div class="col-lg-3 col-md-6 mb-4">
+              <div class="view overlay">
+               <span class="image-cropper">
+                <img src="{{ item.image.url }}" class="card-img-top circular-square " height="100px">
+               </span>
+               <h5 class="caption"><a href="{{item.get_abolute_url}}">{{item.name}} </a></h5>
+               <span>${{ item.price }}</span>
+              </div>
+        
+          </div>
+          {% endfor %}
+        </div>
+    
+       
+
+        <ul class="pagination">
+          {% if object.has_previous %}
+            <li><a  class="btn btn-outline-primary" href="?page=1">&laquo;</a></li>
+            <li><a  class="btn btn-outline-primary" href="?page={{ object.previous_page_number  }}">{{ object.previous_page_number  }}</a></li>
+            {% else %}
+            <li class="disabled btn btn-outline-primary"><span>&laquo;</span></li>
+          {% endif %}
+          {% for i in  object.paginator.page_range %}
+          {% if object.number == i %}
+             <li class="active  btn btn-outline-primary"><span>{{ i }} <span class="sr-only"></span></span> </li>
+          {% endif %}
+          {% endfor %}
+          {% if object.has_next %}
+            <li><a class="btn btn-outline-primary" href="?page={{ object.next_page_number }}">{{ object.next_page_number }}</a></li>
+            <li><a class="btn btn-outline-primary" href="?page={{ object.paginator.num_pages }}">&raquo;</a></li>
+          {% else %}
+            <li class="disabled btn btn-outline-primary"><span>&raquo;</span></li>
+          {% endif %}
+      
+      
+        </ul>
+      
+     
+     
+      </section>
+     
+</div>
+ 
+{% endblock content %}
+
+
+
